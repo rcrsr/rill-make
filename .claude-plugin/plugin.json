@@ -1,7 +1,7 @@
 {
   "name": "rill-make",
-  "description": "Rill package authoring skill and engineer agent",
-  "version": "0.19.0",
+  "description": "Rill package authoring workflow for Claude Code and GitHub Copilot",
+  "version": "0.19.1",
   "author": {
     "name": "Andre Bremer"
   }

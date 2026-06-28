@@ -42,7 +42,7 @@ package-name/
 | Action | Command | Notes |
 |--------|---------|-------|
 | Run | `rill run` | Reads `rill-config.json`, executes the `main` handler. |
-| Run with handler params | `rill run -- --param_name value` | Flag names match closure parameter names verbatim. |
+| Run with handler params | `rill run --param_name value` | Flag names match closure parameter names verbatim. |
 | Build | `rill build --output build` | Default nests under `build/<package-name>/`. Pass `--flat` to write directly into `--output`. |
 | Lint | `rill check <file>` | Default fails only on `error` severity. Pass `--min-severity info` for strict mode. |
 | Type-check | `rill check --types` | Resolves `tsc` from `node_modules/.bin/` then `.rill/npm/node_modules/.bin/`. |

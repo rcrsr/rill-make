@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The plugin version tracks the targeted `@rcrsr/rill-cli` minor (0.19.x).
 
+## [0.19.1] - 2026-06-28
+
+### Copilot Support
+
+- GitHub Copilot workspace support via `.github/copilot-instructions.md` (project guidance for blueprint-first package generation).
+- Reusable Copilot Agent prompt at `.github/prompts/create-rill-package.prompt.md` mirroring the same 8-phase flow as `/rill-make:create-rill-package`.
+- README documentation for running `rill-make` workflows from VS Code Copilot Chat.
+
+### Changed
+
+- `.claude-plugin/plugin.json` description updated to reflect dual Claude Code + GitHub Copilot support.
+
 ## [0.19.0] - 2026-05-04
 
 ### Added
@@ -38,3 +50,4 @@ The plugin version tracks the targeted `@rcrsr/rill-cli` minor (0.19.x).
 - `GUIDE.md` recommends Node 22 LTS and the unified `rill` binary; the standalone `rill-run`/`rill-check`/`rill-build` binaries are obsolete.
 
 [0.19.0]: https://github.com/rcrsr/rill-make/releases/tag/v0.19.0
+[0.19.1]: https://github.com/rcrsr/rill-make/releases/tag/v0.19.1

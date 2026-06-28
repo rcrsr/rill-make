@@ -1,0 +1,42 @@
+{
+  "name": "rill-make-copilot-setup",
+  "displayName": "rill-make Copilot Setup",
+  "description": "Installs rill-make GitHub Copilot instructions and prompts into the current workspace.",
+  "version": "0.1.0",
+  "publisher": "rcrsr",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "copilot",
+    "prompt",
+    "rill",
+    "setup"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rillMakeCopilot.initialize",
+        "title": "rill-make: Install Copilot Prompt Pack"
+      }
+    ]
+  },
+  "files": [
+    "extension.js",
+    "README.md",
+    "templates/**",
+    "LICENSE"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rcrsr/rill-make"
+  }
+}

@@ -8,11 +8,11 @@ A rill package is an agent in a portable, runnable form. It bundles everything t
 
 The same package runs in three contexts without code changes:
 
-| Context | Command | What it uses |
-|---------|---------|--------------|
-| Local development | `npm run dev` (`rill run .`) | Reads the package directory directly |
-| HTTP agent server | `npm run build && npm run serve` | `rill build` emits a self-contained bundle to `build/`, then `@rcrsr/rill-agent-http` serves it over HTTP (`POST /agents/:name/run`) |
-| Azure AI Foundry | Deploy the `build/` output with `@rcrsr/rill-agent-foundry` | Same bundle, wrapped in the Foundry Responses API harness |
+|Context|Command|What it uses|
+|---|---|---|
+|Local development|`rill run`|Reads the package directory directly|
+|HTTP agent server|`rill build --output build && node server.js`|`rill build` emits a self-contained bundle to `build/`, then `@rcrsr/rill-agent-http` serves it over HTTP (`POST /agents/:name/run`)|
+|Azure AI Foundry|Deploy the `build/` output with `@rcrsr/rill-agent-foundry`|Same bundle, wrapped in the Foundry Responses API harness|
 
 ### Relationship to `rill-agent`
 
@@ -25,7 +25,7 @@ This separation matters because:
 - **Isolation**: credentials stay in `.env`, never in scripts. Static configuration stays in `rill-config.json`, never hard-coded.
 - **Composition**: one agent can call another via `@rcrsr/rill-agent-ext-ahi`, which registers `ahi::<agentName>` functions in the rill runtime. Co-located agents skip HTTP; remote agents resolve through static URLs.
 
-The skill in this plugin generates the package. `rill-agent` (separate repo) runs it in production. You move from one to the other by running `npm run build` and pointing a server at the output.
+The skill in this plugin generates the package. `rill-agent` (separate repo) runs it in production. You move from one to the other by running `rill build --output build` and pointing a server at the output.
 
 ## 1. Prerequisites
 
@@ -39,20 +39,14 @@ The rill toolkit targets Posix (Linux, macOS). On Windows, use WSL2. On Windows,
 
 The rill runtime and CLI require Node `>= 22.16.0`. Use the latest Node 22 LTS (or newer current release) for forward compatibility.
 
-- Install with nvm (recommended):
-  ```bash
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-  exec $SHELL
-  nvm install --lts
-  nvm use --lts
-  ```
+- Install with nvm (recommended): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && exec $SHELL && nvm install --lts && nvm use --lts`
 - Verify: `node --version` prints `v22.16.0` or higher, and `npm --version` prints a version string.
 
 ### 1.3 Claude Code
 
 You need the Claude Code CLI to install the plugin and run the skill.
 
-- Install: see the official instructions at https://code.claude.com/docs/en/overview.
+- Install: see the official instructions at [https://code.claude.com/docs/en/overview](https://code.claude.com/docs/en/overview).
 - Verify: `claude --version` prints a version string.
 
 ### 1.4 Global `@rcrsr/rill-cli`
@@ -79,14 +73,14 @@ From any directory, inside a Claude Code session.
 
 If you previously installed the plugin from the old `rcrsr/rill-plugins` marketplace (where it was published as `rill@rill-plugins`), remove the old install first:
 
-```
+```text
 /plugin uninstall rill@rill-plugins
 /plugin marketplace remove rill-plugins
 ```
 
 Then add the current marketplace and install:
 
-```
+```text
 /plugin marketplace add rcrsr/claude-plugins
 /plugin install rill-make@claude-plugins
 /reload-plugins
@@ -96,11 +90,22 @@ Then add the current marketplace and install:
 
 Confirm the plugin is active by opening the plugin manager:
 
-```
+```text
 /plugin
 ```
 
 Go to the **Installed** tab. You should see `rill-make` in the list. The skill registers as `/rill-make:create-rill-package` and the subagents are `rill-architect`, `rill-engineer`, and `rill-reviewer`.
+
+## 2.5 Use GitHub Copilot in VS Code
+
+You can run the same workflow from GitHub Copilot Agent mode in VS Code.
+
+1. Open this repository in VS Code.
+2. Open Copilot Chat and switch to Agent mode.
+3. Run the reusable prompt in `.github/prompts/create-rill-package.prompt.md`.
+4. Paste either an inline spec or a spec file path (for example `./spec.md`).
+
+Copilot follows the same blueprint-first architecture and file ownership boundaries described in `ARCHITECTURE.md`.
 
 ## 3. Run the Skill
 
@@ -113,34 +118,51 @@ claude
 
 Inside the session, invoke the skill with one of:
 
-- **Inline description**:
-  ```
-  /rill-make:create-rill-package Summarize the top 5 AI news items each morning from a list of RSS feeds and post the summary to a file.
-  ```
-- **Specification file**:
-  ```
-  /rill-make:create-rill-package ./spec.md
-  ```
-- **No argument** (the skill will ask):
-  ```
-  /rill-make:create-rill-package
-  ```
+- **Inline description**: `/rill-make:create-rill-package Summarize the top 5 AI news items each morning from a list of RSS feeds and post the summary to a file.`
+- **Specification file**: `/rill-make:create-rill-package ./spec.md`
+- **No argument** (the skill will ask): `/rill-make:create-rill-package`
+
+### End-to-End Copilot Example
+
+In Copilot Chat (Agent mode), run `.github/prompts/create-rill-package.prompt.md` and provide this spec:
+
+```text
+Summarize the top 5 AI news items each morning from a list of RSS feeds and write the summary to a markdown file.
+```
+
+Expected flow:
+
+1. Copilot checks prerequisites (`node`, `npm`, `rill`).
+2. Copilot gathers clarifications (feeds list, output path, model/provider, failure policy).
+3. Copilot writes `<package>/.rill-design/blueprint.md`.
+4. Copilot bootstraps and installs selected extensions, then probes call surfaces into `<package>/.rill-design/extension-surfaces.md`.
+5. Copilot generates `rill-config.json`, prompt files, scripts, and any extension stubs from the frozen blueprint.
+6. Copilot runs `rill check` and `rill check --types` (if `extensions/` exists).
+7. Copilot performs one runtime smoke test with `rill run` (or records `SMOKE TEST: SKIPPED (no credentials)` if `.env` is not populated).
+8. Copilot outputs a provisioning checklist for required `${VAR_NAME}` values in `.env`.
+
+Then run the generated package:
+
+```bash
+cd <package>
+rill run
+```
 
 ### What the Skill Does
 
 The skill runs 8 phases. You answer clarifying questions and approve designs along the way.
 
-| Phase | Purpose | Your input |
-|-------|---------|-----------|
-| 0 | Verify prerequisites | None (automatic) |
-| 1 | Fetch rill docs | None |
-| 2 | Gather requirements | Describe the package (or provide a spec) |
-| 3 | Clarifying questions | Answer prompts about data format, LLM provider, storage, scale |
-| 4 | Identify extensions | Review the extension plan |
-| 5 | Design data flow | Approve the pipeline blueprint |
-| 6 | Design custom extensions | Approve third-party npm packages and extension designs |
-| 7 | Implement | Wait while the `rill-engineer` agent writes code |
-| 8 | Review and deliver | Fill in `.env`, then run the package |
+|Phase|Purpose|Your input|
+|---|---|---|
+|0|Verify prerequisites|None (automatic)|
+|1|Fetch rill docs|None|
+|2|Gather requirements|Describe the package (or provide a spec)|
+|3|Clarifying questions|Answer prompts about data format, LLM provider, storage, scale|
+|4|Identify extensions|Review the extension plan|
+|5|Design data flow|Approve the pipeline blueprint|
+|6|Design custom extensions|Approve third-party npm packages and extension designs|
+|7|Implement|Wait while the `rill-engineer` agent writes code|
+|8|Review and deliver|Fill in `.env`, then run the package|
 
 ## 4. Fill in `.env`
 
@@ -156,16 +178,16 @@ The skill does NOT create accounts, fetch keys, or provision remote resources. Y
 
 Once `.env` is populated, tell the skill to run the package:
 
-```
+```text
 run the package
 ```
 
-The skill invokes `npm run dev`, observes the output, and helps diagnose runtime issues. This is the verification step that closes out the workflow.
+The skill invokes `rill run` (including required named flags when the main closure has required params), observes the output, and helps diagnose runtime issues. This is the verification step that closes out the workflow.
 
 For HTTP deployment (optional):
 
-```
-npm run build && npm run serve
+```bash
+rill build --output build && node server.js
 ```
 
 ## Troubleshooting
@@ -177,7 +199,7 @@ npm run build && npm run serve
 
 ## References
 
-- Rill language: https://github.com/rcrsr/rill
-- Rill extensions: https://github.com/rcrsr/rill-ext
-- Rill agent (HTTP deployment): https://github.com/rcrsr/rill-agent
-- Claude Code docs: https://docs.claude.com/en/docs/claude-code
+- Rill language: [https://github.com/rcrsr/rill](https://github.com/rcrsr/rill)
+- Rill extensions: [https://github.com/rcrsr/rill-ext](https://github.com/rcrsr/rill-ext)
+- Rill agent (HTTP deployment): [https://github.com/rcrsr/rill-agent](https://github.com/rcrsr/rill-agent)
+- Claude Code docs: [https://docs.claude.com/en/docs/claude-code](https://docs.claude.com/en/docs/claude-code)
